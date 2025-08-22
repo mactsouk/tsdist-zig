@@ -1,0 +1,18 @@
+.{
+    .name = .zig_distances,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.15.0",
+
+    // If Zig suggests a different fingerprint when you run `zig build`,
+    // replace this value with the suggested one.
+    .fingerprint = 0x6c70ae4efa48ea10,
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "tests",
+    },
+
+    .dependencies = .{},
+}
