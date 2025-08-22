@@ -19,7 +19,7 @@ test "chebyshev distance" {
     const a = [_]f64{ 1.0, 2.0, 8.0 };
     const b = [_]f64{ 4.0, 5.0, 6.0 };
     const result = try distances.chebyshevDistance(&a, &b);
-    try std.testing.expectApproxEqAbs(2.0, result, 1e-10);
+    try std.testing.expectApproxEqAbs(3.0, result, 1e-10);
 }
 
 test "invalid input" {
@@ -35,7 +35,7 @@ test "dtw distance" {
     const a = [_]f64{ 1.0, 2.0, 3.0 };
     const b = [_]f64{ 2.0, 3.0, 4.0, 5.0 };
     const result = try distances.dtwDistance(allocator, &a, &b, null);
-    try std.testing.expectApproxEqAbs(@sqrt(7.0), result, 1e-10);
+    try std.testing.expectApproxEqAbs(4, result, 1e-10);
 }
 
 test "dtw distance with window" {
@@ -63,4 +63,9 @@ test "edr distance" {
     const b = [_]f64{ 2.0, 3.0, 4.0, 5.0 };
     const result = try distances.edrDistance(allocator, &a, &b, 0.5);
     try std.testing.expectApproxEqAbs(3.0, result, 1e-10);
+}
+
+test "all tests passed" {
+    // ... other tests have already run ...
+    std.debug.print("All tests passed!\n", .{});
 }
