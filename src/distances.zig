@@ -33,7 +33,7 @@ pub fn chebyshevDistance(a: []const f64, b: []const f64) !f64 {
     return max_diff;
 }
 
-// Space-optimized DTW using only two rows - always returns finite results
+// Space-optimized DTW using only two rows - ensures finite results
 pub fn dtwDistance(
     allocator: std.mem.Allocator,
     a: []const f64,
@@ -53,25 +53,41 @@ pub fn dtwDistance(
     var curr_row = try allocator.alloc(f64, cols);
     defer allocator.free(curr_row);
 
-    // Initialize first row with cumulative costs (aligning empty sequence with b)
+    // Initialize rows with infinity
+    @memset(prev_row, std.math.inf(f64));
+    @memset(curr_row, std.math.inf(f64));
+
+    // Initialize first cell
     prev_row[0] = 0.0;
-    for (1..cols) |j| {
-        prev_row[j] = prev_row[j - 1] + @abs(b[j - 1]);
+
+    // Initialize first row within window
+    if (window) |w| {
+        const max_j = @min(cols, w + 1);
+        for (1..max_j) |j| {
+            prev_row[j] = prev_row[j - 1] + @abs(b[j - 1]);
+        }
+    } else {
+        for (1..cols) |j| {
+            prev_row[j] = prev_row[j - 1] + @abs(b[j - 1]);
+        }
     }
 
     // Process each row
     for (1..(n + 1)) |i| {
-        // First column: cumulative cost of aligning a with empty sequence
+        // Initialize first column within window
         curr_row[0] = prev_row[0] + @abs(a[i - 1]);
 
-        for (1..cols) |j| {
-            // Apply window constraint if specified
+        // Determine window bounds for this row
+        const min_j = if (window) |w| (if (i > w) i - w else 1) else 1;
+        const max_j = if (window) |w| @min(cols, i + w + 1) else cols;
+
+        for (min_j..max_j) |j| {
+            // Apply window constraint
             if (window) |w| {
                 const i_int: i64 = @intCast(i);
                 const j_int: i64 = @intCast(j);
                 if (@abs(i_int - j_int) > @as(i64, @intCast(w))) {
-                    // Outside window - use point-to-point distance as fallback
-                    curr_row[j] = @abs(a[i - 1] - b[j - 1]);
+                    curr_row[j] = std.math.inf(f64);
                     continue;
                 }
             }
@@ -82,8 +98,7 @@ pub fn dtwDistance(
             const insertion = curr_row[j - 1]; // from left
             const match = prev_row[j - 1]; // from diagonal
 
-            const min_val = @min(@min(deletion, insertion), match);
-            curr_row[j] = cost + min_val;
+            curr_row[j] = cost + @min(@min(deletion, insertion), match);
         }
 
         // Swap rows for next iteration
@@ -92,10 +107,30 @@ pub fn dtwDistance(
         curr_row = temp;
     }
 
+    // Check if result is infinite due to window being too small
+    if (std.math.isInf(prev_row[m])) {
+        // Fallback: Compute distance with a wider window or point-to-point
+        var max_cost: f64 = 0.0;
+        for (0..@min(n, m)) |i| {
+            max_cost += @abs(a[i] - b[i]);
+        }
+        // Add costs for remaining points if lengths differ
+        if (n > m) {
+            for (m..n) |i| {
+                max_cost += @abs(a[i]);
+            }
+        } else if (m > n) {
+            for (n..m) |i| {
+                max_cost += @abs(b[i]);
+            }
+        }
+        return max_cost;
+    }
+
     return prev_row[m];
 }
 
-// Convenience wrappers
+// Convenience wrappers (unchanged)
 pub fn dtwDistanceDefaultWindow(
     allocator: std.mem.Allocator,
     a: []const f64,
