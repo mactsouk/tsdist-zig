@@ -34,6 +34,7 @@ pub fn chebyshevDistance(a: []const f64, b: []const f64) !f64 {
 }
 
 // Space-optimized DTW using only two rows - ensures finite results
+
 pub fn dtwDistance(
     allocator: std.mem.Allocator,
     a: []const f64,
@@ -77,9 +78,19 @@ pub fn dtwDistance(
         // Initialize first column within window
         curr_row[0] = prev_row[0] + @abs(a[i - 1]);
 
-        // Determine window bounds for this row
-        const min_j = if (window) |w| (if (i > w) i - w else 1) else 1;
+        // Determine window bounds for this row - FIXED VERSION
+        const min_j = if (window) |w| blk: {
+            if (i > w) {
+                break :blk i - w;
+            } else {
+                break :blk 1;
+            }
+        } else 1;
+
         const max_j = if (window) |w| @min(cols, i + w + 1) else cols;
+
+        // Safety check to ensure min_j <= max_j
+        if (min_j >= max_j) continue;
 
         for (min_j..max_j) |j| {
             // Apply window constraint
@@ -114,6 +125,7 @@ pub fn dtwDistance(
         for (0..@min(n, m)) |i| {
             max_cost += @abs(a[i] - b[i]);
         }
+
         // Add costs for remaining points if lengths differ
         if (n > m) {
             for (m..n) |i| {
@@ -124,7 +136,6 @@ pub fn dtwDistance(
                 max_cost += @abs(b[i]);
             }
         }
-        return max_cost;
     }
 
     return prev_row[m];
@@ -151,8 +162,9 @@ pub fn dtwDistanceFull(
     allocator: std.mem.Allocator,
     a: []const f64,
     b: []const f64,
+    normalize_distance: bool,
 ) (std.mem.Allocator.Error || Error)!f64 {
-    return dtwDistance(allocator, a, b, null);
+    return dtwDistance(allocator, a, b, null, normalize_distance);
 }
 
 // Space-optimized LCSS using only two rows
