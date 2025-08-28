@@ -1,3 +1,4 @@
+// START:basic
 const std = @import("std");
 const math = std.math;
 
@@ -32,6 +33,7 @@ pub fn chebyshevDistance(a: []const f64, b: []const f64) !f64 {
     }
     return max_diff;
 }
+// END:basic
 
 // Space-optimized LCSS using only two rows
 pub fn lcssDistance(
@@ -127,7 +129,10 @@ pub fn edrDistance(
         curr_row[0] = @floatFromInt(i); // First column: [0, 1, 2, 3, ...]
 
         for (1..cols) |j| {
-            const cost: f32 = if (@abs(a[i - 1] - b[j - 1]) <= epsilon) 0.0 else 1.0;
+            const cost: f32 = if (@abs(
+                a[i - 1] - b[j - 1],
+            ) <= epsilon) 0.0 else 1.0;
+
             const del = prev_row[j] + 1.0; // deletion
             const ins = curr_row[j - 1] + 1.0; // insertion
             const sub = prev_row[j - 1] + cost; // substitution

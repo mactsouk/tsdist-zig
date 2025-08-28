@@ -25,9 +25,18 @@ test "chebyshev distance" {
 test "invalid input" {
     const a = [_]f64{ 1.0, 2.0 };
     const b = [_]f64{1.0};
-    try std.testing.expectError(error.InvalidInput, distances.euclideanDistance(&a, &b));
-    try std.testing.expectError(error.InvalidInput, distances.manhattanDistance(&a, &b));
-    try std.testing.expectError(error.InvalidInput, distances.chebyshevDistance(&a, &b));
+    try std.testing.expectError(
+        error.InvalidInput,
+        distances.euclideanDistance(&a, &b),
+    );
+    try std.testing.expectError(
+        error.InvalidInput,
+        distances.manhattanDistance(&a, &b),
+    );
+    try std.testing.expectError(
+        error.InvalidInput,
+        distances.chebyshevDistance(&a, &b),
+    );
 }
 
 test "lcss distance" {
